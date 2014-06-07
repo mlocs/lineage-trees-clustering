@@ -1,0 +1,16 @@
+scons: Reading SConscript files ...
+Using default gcc
+Checking for C++ library m... yes
+scons: done reading SConscript files.
+scons: Building targets ...
+scons: building associated VariantDir targets: tmp/build_pymunkres
+swig -o tmp/build_pymunkres/pymunkres_wrap.cc -c++ -python pymunkres.i
+g++ -o tmp/build_pymunkres/pymunkres_wrap.os -c -fPIC -Wall -ansi -pedantic -Wno-long-long -fno-strict-aliasing -O3 -funroll-loops -ffloat-store -I/usr/include/python2.6 -I. tmp/build_pymunkres/pymunkres_wrap.cc
+g++ -o tmp/build_pymunkres/munkres.os -c -fPIC -Wall -ansi -pedantic -Wno-long-long -fno-strict-aliasing -O3 -funroll-loops -ffloat-store -I/usr/include/python2.6 munkres.cpp
+g++ -o tmp/build_pymunkres/_pymunkres.so -shared tmp/build_pymunkres/pymunkres_wrap.os tmp/build_pymunkres/munkres.os -lm
+g++ -o tmp/build_pymunkres/munkres.o -c -Wall -ansi -pedantic -Wno-long-long -fno-strict-aliasing -O3 -funroll-loops -ffloat-store -I/usr/include/python2.6 munkres.cpp
+ar rc tmp/build_pymunkres/libmunkres.a tmp/build_pymunkres/munkres.o tmp/build_pymunkres/munkres.os
+ranlib tmp/build_pymunkres/libmunkres.a
+Copy("_pymunkres.so", "tmp/build_pymunkres/_pymunkres.so")
+Copy("libmunkres.a", "tmp/build_pymunkres/libmunkres.a")
+scons: done building targets.

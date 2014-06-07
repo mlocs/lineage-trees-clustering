@@ -1,0 +1,108 @@
+# This file is part of the Lineage Tree Clustering project. 
+# Copyright (C) 2014 
+# Author: Valeriy Khakhutskyy
+# 
+# Lineage Tree Clustering is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Lineage Tree Clustering is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Lineage Tree Clustering project files.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os
+import distutils.sysconfig
+import SCons
+
+# Custom test for executables used during configuration
+def CheckExec(context, cmd):
+    context.Message( 'Checking for %s...' % (cmd) )
+    ret = context.env.WhereIs(cmd)
+    if ret == None:
+        ret = ''
+    context.Result(ret)
+    return ret
+
+vars = Variables("custom.py")
+
+# define the flags 
+vars.Add('CPPFLAGS','Set additional Flags, they are compiler-depended','')
+vars.Add('LINKFLAGS','Set additional Linker-flags, they are linker-depended','')
+
+# initialize environment
+env = Environment(variables = vars, ENV = os.environ)
+
+config = env.Configure(custom_tests = { 'CheckExec' : CheckExec})
+
+# check scons
+EnsureSConsVersion(1, 0)
+print "Using SCons", SCons.__version__
+
+# check whether swig installed
+swigAvail = True
+if not config.CheckExec('swig'):
+    sys.stderr.write("Error: swig cannot be found. Check PATH environment variable!\n")
+    swigAvail = False
+
+
+# check for Python headers
+pyAvail = True
+config.env.AppendUnique(CPPPATH = [distutils.sysconfig.get_python_inc()])
+if not config.CheckCXXHeader('Python.h'):
+    sys.stderr.write("Error: Python.h not found. Check path to Python include files: "
+                     + distutils.sysconfig.get_python_inc() + "\n")
+    sys.stderr.write("Warning: You might have to install package python-dev\n")
+    sys.stderr.write("... skipping Python support and unit tests")
+    pyAvail = False
+else:
+    numPyAvail = True
+    # remove -Werror, if set. Elsewise, test will fail
+    flagErrorRemoved = False
+    if '-Werror' in config.env.get('CPPFLAGS'):
+        config.env['CPPFLAGS'].remove('-Werror')
+        flagErrorRemoved = True
+    if not config.CheckCXXHeader(['pyconfig.h','Python.h','numpy/arrayobject.h']):
+        try:
+            print "... trying to extend path:"
+            # get path to numpy header files
+            import numpy
+            numpy_path = os.path.join(os.path.split(numpy.__file__)[0],"core","include")
+            if os.path.exists(numpy_path):
+                config.env.AppendUnique(CPPPATH = [numpy_path])
+                if not config.CheckCXXHeader(['pyconfig.h','Python.h','numpy/arrayobject.h']):
+                    numPyAvail = False
+            else:
+                sys.stderr.write("   Cannot find NumPy header files in:", numpy_path, "\n")
+        except Exception, e:
+            sys.stderr.write("   NumPy not available!\nException: %s\n" % e)
+            numPyAvail = False
+    if not numPyAvail:
+        sys.stderr.write("   No NumPy support.\n   Corresponding unit tests and extended functionality are missing!\n")
+    else:
+        config.env.Append(NUMPY_AVAIL=1)
+    # reappend -Werror if removed
+    if flagErrorRemoved:
+        config.env.Append(CPPFLAGS=['-Werror'])
+
+Export('env')
+
+#start build of pymunkres
+SConscript('SConscript', build_dir='tmp/build_pymunkres', duplicate=0)
+SConscript('SConscriptInterfaces', build_dir='tmp/build_pymunkres', duplicate=0)
+
+
+# Copy required files
+cpy = []
+cpy += Command("#_pymunkres.so", "#/tmp/build_pymunkres/_pymunkres.so", Copy("$TARGET", "$SOURCE"))
+cpy += Command("#pymunkres.py", "#/tmp/build_pymunkres/pymunkres.py", Copy("$TARGET", "$SOURCE"))
+cpy += Command("#libmunkres.a", "#/tmp/build_pymunkres/libmunkres.a", Copy("$TARGET", "$SOURCE"))
+
+
+
+Help(vars.GenerateHelpText(env))

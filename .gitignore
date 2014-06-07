@@ -1,0 +1,5 @@
+*.pyc
+efficient_metrics/pymunkres.py
+efficient_metrics/_pymunkres.so
+effiicent_metrics/libmunkres.a
+munkres/.sconf_temp
