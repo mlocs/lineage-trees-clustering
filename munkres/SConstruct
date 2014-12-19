@@ -19,6 +19,7 @@
 import os
 import distutils.sysconfig
 import SCons
+import sys
 
 # Custom test for executables used during configuration
 def CheckExec(context, cmd):
