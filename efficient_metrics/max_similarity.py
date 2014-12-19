@@ -29,8 +29,8 @@ class MaxSimilarityMetric(AbstractDistance):
 		return None
 	
 	def sigma(self, u,v):
-		if u.getLabel() != v.getLabel(): return 0
-		else: return 1
+		if u.getLabel() != v.getLabel(): return 0.
+		else: return 1.
 	#	return 1
 	
 	def AnchoredSimilarity(self, u, w, tHN1, tHN2):
@@ -70,15 +70,15 @@ class MaxSimilarityMetric(AbstractDistance):
 		maxsim = 0
 		self.similarityHash = defaultdict(int)
 		for u in T1.getVertices():
-			if len(u.getChildren())>0:
-				sim = self.AnchoredSimilarity( u, T2.getRoot(), T1.getTreeHashNum(), T2.getTreeHashNum())
-				if sim > maxsim:
-					maxsim = sim
+			#if len(u.getChildren())>0:
+			sim = self.AnchoredSimilarity( u, T2.getRoot(), T1.getTreeHashNum(), T2.getTreeHashNum())
+			if sim > maxsim:
+				maxsim = sim
 		for w in T2.getVertices():
-			if len(w.getChildren())>0:
-				sim = self.AnchoredSimilarity( T1.getRoot(), w, T1.getTreeHashNum(), T2.getTreeHashNum())
-				if sim > maxsim:
-					maxsim = sim
+			#if len(w.getChildren())>0:
+			sim = self.AnchoredSimilarity( T1.getRoot(), w, T1.getTreeHashNum(), T2.getTreeHashNum())
+			if sim > maxsim:
+				maxsim = sim
 		del self.similarityHash
 		return maxsim
 		
